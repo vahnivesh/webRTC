@@ -10,7 +10,6 @@ wss.on("connection", ws => {
     let data;
     try { data = JSON.parse(raw); } catch { return; }
 
-    // Register browser ID
     if (data.type === "register") {
       id = data.id;
       peers.set(id, ws);
@@ -18,7 +17,6 @@ wss.on("connection", ws => {
       return;
     }
 
-    // Check online
     if (data.type === "isOnline") {
       ws.send(JSON.stringify({
         type: "isOnline",
@@ -28,7 +26,6 @@ wss.on("connection", ws => {
       return;
     }
 
-    // Forward messages
     if (data.to && peers.has(data.to)) {
       peers.get(data.to).send(JSON.stringify({ ...data, from: id }));
     }
