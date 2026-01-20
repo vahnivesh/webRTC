@@ -24,6 +24,16 @@ wss.on("connection", ws => {
       return;
     }
 
+    /* ---------- ONLINE CHECK (for private chat) ---------- */
+    if (data.type === "isOnline") {
+      ws.send(JSON.stringify({
+        type: "isOnline",
+        peer: data.peer,
+        online: peers.has(data.peer)
+      }));
+      return;
+    }
+
     /* ---------- CREATE ROOM ---------- */
     if (data.type === "create-room") {
       const roomId = crypto.randomUUID().slice(0, 6);
@@ -49,7 +59,7 @@ wss.on("connection", ws => {
       room.add(myId);
       myRoom = data.roomId;
 
-      // notify everyone in room
+      // notify others in room
       for (const pid of room) {
         if (pid !== myId && peers.has(pid)) {
           peers.get(pid).send(JSON.stringify({
@@ -67,7 +77,7 @@ wss.on("connection", ws => {
       return;
     }
 
-    /* ---------- RELAY SIGNALING ---------- */
+    /* ---------- RELAY (PRIVATE + WEBRTC SIGNALING) ---------- */
     if (data.to && peers.has(data.to)) {
       peers.get(data.to).send(JSON.stringify({
         ...data,
@@ -90,4 +100,4 @@ wss.on("connection", ws => {
   });
 });
 
-console.log("Signaling server with rooms ready");
+console.log("Signaling server with rooms + private chat ready");
