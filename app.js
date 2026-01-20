@@ -1,9 +1,6 @@
 import { WebSocketServer } from "ws";
 
-const PORT = process.env.PORT || 3000;
-const wss = new WebSocketServer({ port: PORT });
-
-// id -> websocket (RAM ONLY)
+const wss = new WebSocketServer({ port: process.env.PORT || 3000 });
 const peers = new Map();
 
 wss.on("connection", ws => {
@@ -11,13 +8,9 @@ wss.on("connection", ws => {
 
   ws.on("message", raw => {
     let data;
-    try {
-      data = JSON.parse(raw);
-    } catch {
-      return;
-    }
+    try { data = JSON.parse(raw); } catch { return; }
 
-    // Register browser ID
+    // Register
     if (data.type === "register") {
       myId = data.id;
       peers.set(myId, ws);
@@ -25,7 +18,7 @@ wss.on("connection", ws => {
       return;
     }
 
-    // Online check
+    // Online check (reply only to requester)
     if (data.type === "isOnline") {
       ws.send(JSON.stringify({
         type: "isOnline",
@@ -35,7 +28,7 @@ wss.on("connection", ws => {
       return;
     }
 
-    // Relay everything else
+    // Forward request / accept / offer / answer / candidate
     if (data.to && peers.has(data.to)) {
       peers.get(data.to).send(JSON.stringify({
         ...data,
